@@ -1,0 +1,92 @@
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2, user-scalable=no">
+<style>
+
+* {
+	margin: 0px;
+	box-sizing: border-box;
+}
+
+
+#controller {
+	width: 100%;
+	height: 100%;
+	position: fixed;
+}
+
+#pad {
+	width: 240px;
+	height: 240px;
+	background: #aaa;
+	border: 1px solid #222;
+	border-radius: 50%;
+}
+
+#joysticknub {
+	width: 80px;
+	height: 80px;
+	background: #555;
+	border: 1px solid #222;
+	border-radius: 50%;
+	position: relative;
+	left: 120px;
+	top: 120px;
+	margin: -40px 0px 0px -40px;
+}
+
+#bite {
+	position: fixed;
+	bottom: 0px;
+	right: 0px;
+	width: 120px;
+	height: 120px;
+	border-radius: 60px;
+	background-color: #aa4455;
+	padding: 0px;
+	margin: 0px;
+}
+
+#join {
+	padding: 20px;
+	background-color: #2266aa;
+	border-radius: 5px;
+	position: fixed;
+	right: 10px;
+	top: 10px;
+}
+
+#track {
+	position: absolute;
+	width: 240px;
+	height: 120px;
+	margin: auto !important;
+}
+
+
+
+</style>
+<script src='js/lib/socket.io.js'></script>
+<script src='js/lib/functions.js'></script>
+</head>
+<body>
+<div id=controller>
+
+	<div id=pad>
+	
+		<div id=joystickNub> </div>
+	
+	</div>
+	<!--<button id=jn>join</button>
+	<button id=up>UP</button>
+	<button id=dn>DN</button>-->
+<div id=track></div>
+</div>
+<div id=bite><h1>BITE</h1></div>
+<div id=join>JOIN</div>
+
+
+</body>
+<script src='js/controller.js'></script>
+
+</html>

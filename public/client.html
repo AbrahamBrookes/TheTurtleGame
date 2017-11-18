@@ -1,0 +1,51 @@
+<html>
+<head></head>
+<style>
+
+.button {
+	width: 100px;
+	height: 100px;
+	padding: 80px;
+	margin: 20px;
+	box-sizing: border-box;
+	display: inline-block;
+}
+
+#red {
+	background: #bb0022;
+}
+
+#blue {
+	background: #1144dd;
+}
+
+
+</style>
+<script src='js/lib/socket.io.js'></script>
+</head>
+
+<body>
+<div class=button id=blue> </div>
+<div class=button id=red> </div>
+</body>
+
+<script>
+$ = function(el){
+	return document.querySelector(el);
+}
+Object.prototype.on = function(type, func){
+	this.addEventListener(type, func);
+}
+
+var socket = io();
+
+socket.on('clientRed', function(){
+	$('body').style = 'background: #bb0022;';
+});
+socket.on('clientBlue', function(){
+	$('body').style = 'background: #1144dd;';
+});
+
+</script>
+
+</html>
