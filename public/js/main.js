@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
 
 	var clock, container, camera, scene, renderer, listener;
 
-	var ground, character;
+	var ground, character, nest;
 	var light;
 	var textureLoader = new THREE.TextureLoader();
 	var loader = new THREE.JSONLoader();
@@ -25,13 +25,31 @@ document.addEventListener("DOMContentLoaded", function(event) {
 		socket.emit('requestControls');
 	}
 
-		
-	function init() {
-		
+	// a slow loop for checking things every couple of frames
+	function slowLoop(){
+		// check if we have players
+		if(Object.keys(players).length < 1){
+			// no players, do nothing
+			return;
+		}
 
-		//var jellJell = new Jellyfish();
-		//jellJell.yey();
+		nest.checkForPlayers(players);
+
+	}
+	// run our slow loop every 10 frames
+	setInterval(slowLoop, 100);
+
+
+	// listen for our custom jellyfishDeleted event and remove the jellyfish from the array
+	document.addEventListener('jellyfishDeleted', function(e){
+		console.log('jellyfish deleted');
+		jellyfishes.splice(jellyfishes.indexOf(e.detail), 1);
+	});
+
+
+
 		
+	function init() {		
 		// prepare to register this device as the client
 		socket.on('clientRegistered', function(e){
 			console.log('client registered with id ' + e);
@@ -60,6 +78,8 @@ document.addEventListener("DOMContentLoaded", function(event) {
 		// register socket events
 		
 		socket.on('addPlayer', function(e){ // a new controller wants to join - 'e' contains the socket id of the socket from the server to the controller
+			console.log('adding player ' + e);
+			
 			// spawn a player
 			loader.load('./models/seaturtle.json', function (geometry, materials) {
 				materials.forEach(function (material) {
@@ -88,18 +108,18 @@ document.addEventListener("DOMContentLoaded", function(event) {
 
 				// tell the server we're all added
 				socket.emit('playerAdded', e);
-				
-
 			});
 		});
 		
 		socket.on('deletePlayer', function(e){
-			players[e].deleteMe();
-			delete players[e];
+			if( !! players[e] ) {
+				players[e].deleteMe()
+				delete players[e]
+			}
 		});
 		
 		socket.on('bite', function(e){
-			players[e].bite();
+			players[e].bite(jellyfishes);
 		});
 		
 		window.addEventListener('resize', onWindowResize, false);
@@ -148,22 +168,6 @@ document.addEventListener("DOMContentLoaded", function(event) {
 		camera.rotateX( 0.15 );
 		listener = new THREE.AudioListener();
 		camera.add(listener);
-		//controls = new THREE.OrbitControls(camera, renderer.domElement);
-		//controls.target = new THREE.Vector3(0, 0.6, 0);
-
-
-
-	/*
-	  textureLoader.load('textures/ground.png', function (texture) {
-		var geometry = new THREE.PlaneBufferGeometry(2, 2);
-		geometry.rotateX(-Math.PI / 2);
-		var material = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
-		ground = new THREE.Mesh(geometry, material);
-		scene.add(ground);
-
-	  });
-	*/
-		
 
 		loader.load('./models/scene.json', function (geometry, materials) {
 
@@ -179,6 +183,30 @@ document.addEventListener("DOMContentLoaded", function(event) {
 
 
 		});
+
+		// add the turtles nest to the bottom left hand corner
+		loader.load('./models/jellyfish_01.json', function (geometry, materials) {
+			// handle multiple materials
+			materials.forEach(function (material) {
+				material.transparent = true;
+				material.blending = THREE.AdditiveBlending;
+				material.side = THREE.DoubleSide;
+				//material.mapDiffuse = './textures/jellyfish_01_dif.png'
+			});
+			
+			var multiMat =  new THREE.MultiMaterial(materials);
+			var basicMat =  new THREE.MeshBasicMaterial(materials[0]);
+			var tempMesh = new THREE.SkinnedMesh(geometry, basicMat);
+
+			nest = new Nest({
+				pos: {x: 20, y: -10},
+				mesh: tempMesh,
+			});
+
+			scene.add(nest.mesh);
+		});
+
+
 		
 		// jellyfish tiem!!
 		loader.load('./models/jellyfish_01.json', function (geometry, materials) {
@@ -194,20 +222,23 @@ document.addEventListener("DOMContentLoaded", function(event) {
 			var basicMat =  new THREE.MeshBasicMaterial(materials[0]);
 			var tempMesh = new THREE.SkinnedMesh(geometry, basicMat);
 			
-			jellyfishes.push( new Jellyfish({
+			let jelly = new Jellyfish({
 				pos: {x: 100, y: 100},
 				vel: {x: 0, y: 0},
-				mesh: tempMesh
-			}));
+				mesh: tempMesh,
+				scene,
+			});
+
+			jellyfishes.push(jelly);
 			
 			scene.add(tempMesh);
 
 		});
 
-		light = new THREE.DirectionalLight(0x8888ff, 1);
-		scene.add(light);
-		scene.add(light.target);
-		light.target.position = new THREE.Vector3( 10, 100, 0 );
+		// light = new THREE.DirectionalLight(0x8888ff, 1);
+		// scene.add(light);
+		// scene.add(light.target);
+		// light.target.position = new THREE.Vector3( 10, 100, 0 );
 
 		animate();
 
