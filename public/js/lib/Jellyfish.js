@@ -21,18 +21,21 @@ function Jellyfish(obj){
 				y: float
 			},
 			mesh: tempMesh,
-			
+			scene: THREE.Scene();
 		}
 	
 	*/
 	
 	this.mesh = obj.mesh;	// a new THREE.SkinnedMesh object
+	this.scene = obj.scene;
 	var parent = this;
 	this.incrementer = 0; // a number we will use to make the jelly bob up and down
 	
 	
 	this.deleteMe = function(){
-		scene.remove(this.mesh);
+		// send out a javascript event to let the game know we are deleting this jellyfish
+		var event = new CustomEvent("jellyfishDeleted", {detail: {jellyfish: this}});
+		this.scene.remove(this.mesh);
 		this.mesh.geometry.dispose();
 	}
 
@@ -46,11 +49,6 @@ function Jellyfish(obj){
 		this.mesh.position.y += offset;
 		this.mesh.rotation.y += (offset + 0.01) / 5;
 		this.mesh.rotation.z += offset / 5;
-	
-	}
-	
-	this.yey = function(){
-		alert('yey');
 	}
 	
 }

@@ -3,7 +3,9 @@
 		we will store such things as:
 				* 3D mesh
 				* position and velocity
-				* collision		This player class can only be called from within the callback of a THREE.JSONLoader()'s load() function		as it needs to store the resulting mesh asynchronously so we can reference it properly.
+				* collision
+		This player class can only be called from within the callback of a THREE.JSONLoader()'s load() function
+		as it needs to store the resulting mesh asynchronously so we can reference it properly.
 	*/
 
 
@@ -17,7 +19,10 @@ function Player(obj){
 			vel: {
 				x: float,
 				y: float
-			},			mesh: tempMesh,			mixer: tempMixer,			socketId: socket.id,
+			},
+			mesh: tempMesh,
+			mixer: tempMixer,
+			socketId: socket.id,
 			scene: THREE.Scene();
 			
 		}
@@ -28,30 +33,109 @@ function Player(obj){
 	this.actions = {}; // an object to hold arbitrary action (animation clip) names
 	this.mixer = new THREE.AnimationMixer(obj.mesh); // a new THREE.AnimationMixer
 	this.trackerBall; // a mesh object used to point the character model when moving
-	this.controls = {}; // stores our controls from the phone	this.position = {x:0, y:0, z:0}; // xyz position	this.velocity = {x:0, y:0, z:0}; // xyz velocity	this.velocityGoal = {x:0, y:0, z:0}; // xyz velocity goal for lerping movement
+	this.controls = {}; // stores our controls from the phone
+	this.position = {x:0, y:0, z:0}; // xyz position
+	this.velocity = {x:0, y:0, z:0}; // xyz velocity
+	this.velocityGoal = {x:0, y:0, z:0}; // xyz velocity goal for lerping movement
 	this.socketId = obj.socketId; // the socket to the controller for this player
 	this.pauseRotate = 0; // when we pause, rotate proud a bit. Track the rotation in this variable. Radians
 	this.scene = obj.scene;
+	this.currentJellyfish = null; // the jellyfish we are currently holding
+	this.headbone = this.mesh.skeleton.bones.find(bone => bone.name === "head")
 	
 	var parent = this;
 	
-	// add our trackerBall	var mySphereGeometry = new THREE.SphereGeometry( 0.5, 12, 8 );	var mySphereMaterial = new THREE.MeshBasicMaterial( { transparent: true, opacity: 0, wireframe: true } );	this.trackerBall = new THREE.Mesh( mySphereGeometry, mySphereMaterial );	this.scene.add( this.trackerBall );			this.control = function(controls){		this.controls = controls;		// use the cartesian offset from the joystick on the controller		// to decide how to move the player		if(controls.joystickDown == 1){			// joystick is being manipulated			var trackToX = this.mesh.position.x - (this.controls.cart.x / 15);			var trackToY = this.mesh.position.y - (this.controls.cart.y / 15);			if(trackToX > 25) trackToX = 25;			if(trackToX < -25) trackToX = -25;			if(trackToY > 16) trackToY = 16;			if(trackToY < -8) trackToY = -8;			this.trackerBall.position.x = trackToX;			this.trackerBall.position.y = trackToY;			this.mesh.lookAt(this.trackerBall.position);		} else if(controls.joystickDown == 0){
+
+	// add our trackerBall
+	var mySphereGeometry = new THREE.SphereGeometry( 0.5, 12, 8 );
+	var mySphereMaterial = new THREE.MeshBasicMaterial( { transparent: true, opacity: 0, wireframe: true } );
+	this.trackerBall = new THREE.Mesh( mySphereGeometry, mySphereMaterial );
+	this.scene.add( this.trackerBall );
+	
+	
+	this.control = function(controls){
+		this.controls = controls;
+		// use the cartesian offset from the joystick on the controller
+		// to decide how to move the player
+		if(controls.joystickDown == 1){
+			// joystick is being manipulated
+			var trackToX = this.mesh.position.x - (this.controls.cart.x / 15);
+			var trackToY = this.mesh.position.y - (this.controls.cart.y / 15);
+			if(trackToX > 25) trackToX = 25;
+			if(trackToX < -25) trackToX = -25;
+			if(trackToY > 16) trackToY = 16;
+			if(trackToY < -8) trackToY = -8;
+			this.trackerBall.position.x = trackToX;
+			this.trackerBall.position.y = trackToY;
+			this.mesh.lookAt(this.trackerBall.position);
+		} else if(controls.joystickDown == 0){
 			// joystick released, spring the trackerBall back to the player
 			
 		}
-		
-		if(controls.bite == 1){
-			this.bite();
-		}
-			}		this.deleteMe = function(){		this.scene.remove(this.mesh);
-		this.scene.remove(this.trackerBall);		this.trackerBall.geometry.dispose();
-		this.mesh.geometry.dispose();	}
+	}
 	
-	this.bite = function(){
+	this.deleteMe = function(){
+		this.scene.remove(this.mesh);
+		this.scene.remove(this.trackerBall);
+		this.trackerBall.geometry.dispose();
+		this.mesh.geometry.dispose();
+	}
+	
+	this.bite = function(jellyfishes){
 		this.mixer.clipAction('bite').reset().play().fadeIn(0.15).fadeOut(0.15);
-	}	this.update = function(delta) {		// runs in the render loop		var maxVelocity = .025;
-				// lerp up our velocity		var cartVelocity = getCart(this.mesh.position, this.trackerBall.position);		var polVelocity = cart2pol(cartVelocity.x, cartVelocity.y);		// clamp our velocity		if(polVelocity.mag > 10) polVelocity.mag = 10;
-		if(polVelocity.mag < 0.25) polVelocity.mag = 0;		// scale our velocity		var finalVelocity = (polVelocity.mag * maxVelocity);				// handle character animation 		// changing animation weights 		// depending on position of trackball		var trackerDistX = Math.abs(this.trackerBall.position.x - this.mesh.position.x);		var trackerDistY = Math.abs(this.trackerBall.position.y - this.mesh.position.y);		var trackerScalar = (trackerDistX + trackerDistY) / 5;		this.actions['swim'].play();		this.actions['idle'].weight = 1- trackerScalar;		this.actions['swim'].weight = trackerScalar;
+		
+			// if there is a jellyfish in the way, bite it
+			for(var i = 0; i < jellyfishes.length; i ++){
+				if(jellyfishes[i].mesh.position.distanceTo(this.headbone.position) < 1){
+					// assign the jellyfish to our internal variable
+					this.currentJellyfish = jellyfishes[i];
+					// attach the jellyfish to the players "head" bone
+					this.headbone.add(this.currentJellyfish.mesh);
+					// rotate the jellyfish just so
+					this.currentJellyfish.mesh.rotation.x = -Math.PI/2;
+					// offset the jellyfish forward a tad
+					this.currentJellyfish.mesh.position.set(0, -1.5, 0);
+				}
+			}
+	}
+
+	this.scoreJellyfish = function(){
+		if(this.currentJellyfish != null){
+			// remove the jellyfish from the players head
+			this.headbone.remove(this.currentJellyfish.mesh);
+			// delete the jellyfish
+			this.currentJellyfish.deleteMe();
+			// set the currentJellyfish variable to null
+			this.currentJellyfish = null;
+			// score some points
+			alert("scored a jellyfish!");
+		}
+	}
+
+
+	this.update = function(delta) {
+		// runs in the render loop
+		var maxVelocity = .025;
+		
+		// lerp up our velocity
+		var cartVelocity = getCart(this.mesh.position, this.trackerBall.position);
+		var polVelocity = cart2pol(cartVelocity.x, cartVelocity.y);
+		// clamp our velocity
+		if(polVelocity.mag > 10) polVelocity.mag = 10;
+		if(polVelocity.mag < 0.25) polVelocity.mag = 0;
+		// scale our velocity
+		var finalVelocity = (polVelocity.mag * maxVelocity);
+		
+		// handle character animation 
+		// changing animation weights 
+		// depending on position of trackball
+		var trackerDistX = Math.abs(this.trackerBall.position.x - this.mesh.position.x);
+		var trackerDistY = Math.abs(this.trackerBall.position.y - this.mesh.position.y);
+		var trackerScalar = (trackerDistX + trackerDistY) / 5;
+		this.actions['swim'].play();
+		this.actions['idle'].weight = 1- trackerScalar;
+		this.actions['swim'].weight = trackerScalar;
+
 		// degrees = radians * 180 / Math.PI;
 		while(trackerScalar > 1) trackerScalar = 0.99999;
 		if(trackerScalar < 0.1) trackerScalar = 0;
@@ -59,7 +143,17 @@ function Player(obj){
 		var myRotateX = (0.6 * trackerScalar) - this.pauseRotate;
 		this.pauseRotate += myRotateX;
 		
-		this.mesh.rotateX(myRotateX);		
+		this.mesh.rotateX(myRotateX);
+		
 		// apply our velocity
 		if(trackerScalar < 0.3) trackerScalar = 0;
-		this.mesh.translateZ(finalVelocity * trackerScalar);						this.mixer.update(delta);				}	}
+		this.mesh.translateZ(finalVelocity * trackerScalar);
+		
+		
+		this.mixer.update(delta);
+	
+	
+	
+	}
+	
+}

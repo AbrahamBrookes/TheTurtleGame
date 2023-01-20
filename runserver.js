@@ -34,16 +34,20 @@ io.on('connection', function(socket){
 	
 	socket.on('registerClient', function(){ // register the screen machine (client)
 		client.id = socket.id;
+		console.log('client registered with id ' + client.id);
 		io.to(socket.id).emit('clientRegistered', socket.id);
 	});
 	
 	
 	socket.on('addPlayer', function(e){
 		console.log('player requesting to join, id: ' + e);
-		if(client.id == '') return {error: 2}; // no client registered yet, die
+		if(client.id == '') {
+			console.log("no screen client registered to play on cannot join")
+			return {error: 2}; // no client registered yet, die
+		}
 		
 		io.to(client.id).emit('addPlayer', e); // pass the socket id to id this player object on the client
-		
+		console.log('adding player to client');
 	});
 	
 	socket.on('playerAdded', function(e){
@@ -52,8 +56,6 @@ io.on('connection', function(socket){
 		controls[e] = {x: 0, y: 0, z: 0};
 		// tell the controller they have been spawned
 		io.to(e).emit('playerAdded');
-	
-
 	});
 	
 	socket.on('requestControls', function(){		// client has requested controls
@@ -64,10 +66,14 @@ io.on('connection', function(socket){
 	socket.on('replyControls', function(e){	// a controller sent in some controls
 		// collate the controls on the server to send to the client
 		controls[socket.id] = e;
-		//console.log('controls received from controller - ' + Object.keys(controls).length);
+		// console.log('controls received from controller - ' + Object.keys(controls).length);
 		io.to(socket.id).emit('controlsReplied');
 	});
 	
+	socket.on('bite', function(e){
+		console.log('bite received from client');
+		io.to(client.id).emit('bite', e);
+	});
 	
 	socket.on('disconnect', function(e){
 	
@@ -84,11 +90,5 @@ io.on('connection', function(socket){
 });
 
 http.listen(8080, function(){
-  console.log('listening on *:8080');
-  var os = require( 'os' );
-
-var networkInterfaces = os.networkInterfaces( );
-
-console.log( networkInterfaces );
+	console.log('listening on *:8080');
 });
-    

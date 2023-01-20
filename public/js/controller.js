@@ -114,12 +114,9 @@
 	var socket = io();
 	
 	$('#bite').on('touchstart', function(e){
-		// insert the bite into the controls
-		controls.bite = 1;		
-	});
-	$('#bite').on('touchend', function(e){
-		// remove the bite from the controls
-		controls.bite = 0;		
+		log('bite');
+		// send a bite over the socket
+		socket.emit('bite', socket.id);
 	});
 	
 
@@ -128,13 +125,12 @@
 		//this.disabled = true; // stop people from multi-joining
 	// controller wants to join game
 		//log('requesting to join game');
-		socket.emit('addPlayer', socket.id, function(){return true});		// request to join game via socket
+		socket.emit('addPlayer', socket.id);		// request to join game via socket
 		
 	});
 
 	socket.on('playerAdded', function(){			// this controller has been added to the screen
-
-		//log('player has joined game');
+		log('player has joined game');
 	});
 	
 	socket.on('controlsReplied', function(e){					// begin control loop
