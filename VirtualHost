@@ -1,0 +1,14 @@
+
+	<VirtualHost *:443>
+		ServerName turts.brookesy.dev
+		
+		ProxyPass / http://localhost:8080/
+		RewriteEngine on
+		RewriteCond %{HTTP:Upgrade} websocket [NC]
+		RewriteCond %{HTTP:Connection} upgrade [NC]
+		RewriteRule ^/?(.*) "ws://localhost:8080/$1" [P,L]
+		
+		Include /etc/letsencrypt/options-ssl-apache.conf
+		SSLCertificateFile /etc/letsencrypt/live/turts.brookesy.dev/fullchain.pem
+		SSLCertificateKeyFile /etc/letsencrypt/live/turts.brookesy.dev/privkey.pem
+	</VirtualHost>

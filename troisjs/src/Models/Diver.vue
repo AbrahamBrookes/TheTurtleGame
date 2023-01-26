@@ -15,12 +15,9 @@ const mixer = ref()
 const swimAction = ref()
 
 function onLoad(object) {
-	console.log('onLoad', object)
-
+	// animate the diver to play the swim animation
 	mixer.value = new AnimationMixer(object)
-	console.log('mixer', mixer.value);
 	swimAction.value = mixer.value.clipAction(object.animations[5])
-	console.log('action', swimAction.value);
 	swimAction.value.play()
 
     // from the example, not sure if I'm going to need it

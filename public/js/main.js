@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
 	var light;
 	var textureLoader = new THREE.TextureLoader();
 	var loader = new THREE.JSONLoader();
+	// var FBXLoader = new FBXLoader();
 	var objectLoader = new THREE.ObjectLoader();
 	var isLoaded = false;
 	var activeActionName = 'idle';
@@ -15,7 +16,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
 	var jellyfishes = []; // an array to track jellyfish
 	var isFading = false; // a variable to check if we are fading between animations
 
-
+console.log(THREE);
 		
 	// prepare a socket
 	var socket = io();
@@ -81,7 +82,9 @@ document.addEventListener("DOMContentLoaded", function(event) {
 			console.log('adding player ' + e);
 			
 			// spawn a player
-			loader.load('./models/seaturtle.json', function (geometry, materials) {
+
+			FBXLoader.load('./models/3DKit-diver.glb', function (geometry, materials) {
+			// loader.load('./models/seaturtle.json', function (geometry, materials) {
 				materials.forEach(function (material) {
 					material.skinning = true;
 				});
@@ -104,7 +107,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
 					// parent.actions['idle'] << as named in blender
 				};
 				scene.add(players[e].mesh);
-				players[e].actions['idle'].play();
+				players[e].actions['swim'].play();
 
 				// tell the server we're all added
 				socket.emit('playerAdded', e);

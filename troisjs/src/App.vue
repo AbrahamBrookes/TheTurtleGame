@@ -1,7 +1,11 @@
-
 <script setup>
+// deps
+import { ref, onMounted } from 'vue'
+
+// our components
 import Diver from '@/Models/Diver.vue'
-import { Fog } from 'three';
+
+// three/trois
 import {
   AmbientLight,
   Camera,
@@ -14,20 +18,17 @@ import {
   Scene,
 } from 'troisjs';
 
-import { ref, onMounted } from 'vue'
+import { io } from 'socket.io-client'
+var socket = io()
+socket.emit('what')
+// client-side
+socket.on("hello", (arg) => {
+    console.log(arg); // world
+});
 
 const renderer = ref()
 const scene = ref()
 
-onMounted(() => {
-    scene.value.fog = new Fog(0xa0a0a0, 200, 1000);
-	// const renderer = renderer.value
-	// console.log('onMounted', Diver.value);
-	// // const mesh = Diver.value.mesh
-	// renderer.onBeforeRender(() => {
-	// 	// mesh.rotation.x += 0.01
-	// })
-})
 </script>
 
 <template>
@@ -53,10 +54,10 @@ onMounted(() => {
 </template>
 
 <style>
-body {
-	margin: 0;
-}
-canvas {
-	display: block;
-}
+	body {
+		margin: 0;
+	}
+	canvas {
+		display: block;
+	}
 </style>

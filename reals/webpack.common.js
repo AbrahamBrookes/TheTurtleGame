@@ -1,7 +1,7 @@
 const path = require('path')
 
 module.exports = {
-    entry: './src/client/client.ts',
+    entry: './src/client/client.js',
     module: {
         rules: [
             {
@@ -13,6 +13,9 @@ module.exports = {
     },
     resolve: {
         extensions: ['.tsx', '.ts', '.js'],
+        alias: {
+            '@lib': path.resolve(__dirname, 'src/client/lib'),
+        }
     },
     output: {
         filename: 'bundle.js',

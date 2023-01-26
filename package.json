@@ -2,6 +2,6 @@
   "name": "TheTurtleGame",
   "version": "1.0.0",
   "scripts": {
-    "start": "node runserver.js"   
+    "start": "node runserver.js"
   }
 }
